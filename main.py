@@ -2,8 +2,11 @@
 # Copyright by Gennadiy S. aka GennDALF
 
 from players import *
-from help import show_help
+from help import show_help, show_message
 
+
+# приветствие
+show_message('КРЕСТИКИ-НОЛИКИ')
 
 # чтение .ini файла
 if read_ini():
