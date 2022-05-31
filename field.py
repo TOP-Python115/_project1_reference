@@ -65,3 +65,28 @@ def show_field(matrix, *matrices, right=False, center=False):
     print(('' if center else '\n')
           + ('\n' + margin + pad.join(['—'*wd for wd in m_wd]) + '\n').join(rows)
           + '\n')
+
+# проверка на победу или ничью
+def check_win_or_tie():
+    # локальная функция: проверка на победу
+    def check_win():
+        # транспонированная матрица поля: для упрощения перебора
+        #   столбцы прямой матрицы станут строками в транспонированной
+        FIELD_T = [[FIELD[j][i] for j in range(DIM)] for i in range(DIM)]
+        # список из главной и побочной диагоналей
+        DIAGONALS = ([FIELD[i][i] for i in range(DIM)],
+                     [FIELD[i][DIM-i-1] for i in range(DIM)])
+        # перебираем прямую и транспонированную матрицы
+        for matrix in (FIELD, FIELD_T, DIAGONALS):
+            # есть ли ряд, целиком заполненный только одним символом
+            if 1 in [len(set(row)) for row in matrix if all(row)]:
+                # локальную функцию делали, чтобы не выполнять дальнейшие проверки,
+                #   как только будет найдена первая победная комбинация
+                return True
+    # нет пустых  победа  ничья
+    #   False     False   False
+    #   False     True    False
+    #   True      False   True
+    #   True      True    False
+    win = check_win()
+    return win, all([all(row) for row in FIELD]) and not win
