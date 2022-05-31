@@ -13,6 +13,8 @@ DIM = 3
 FIELD = [['']*DIM for _ in range(DIM)]
 # символы
 SYMBOLS = ('X', 'O')
+# отладка
+DEBUG = True
 
 
 # проверка наличия сохранённой партии
@@ -90,3 +92,71 @@ def check_win_or_tie():
     #   True      True    False
     win = check_win()
     return win, all([all(row) for row in FIELD]) and not win
+
+# одна партия
+def game(load=False):
+    global FIELD
+    # одиночная False или парная True игра
+    flag = set(players.PLAYER).isdisjoint({'ai1', 'ai2'})
+    # флаг победы [0] или ничьей [1]
+    win_or_tie = (False, False)
+    # цикл для одной партии
+    while not any(win_or_tie):
+        # перебираем игроков в кортеже
+        for i in range(2):
+            # выбор приглашения для ввода
+            prompt = ('ваш ход > ', f'ход игрока {players.PLAYER[i].title()} > ')[flag]
+            # запросить ход бота
+            if players.PLAYER[i].startswith('ai'):
+                # в случае загружаемой партии c ботом, когда игрок ходит ноликом (вторым),
+                #   переключаем параметр load и переходим к следующей итерации
+                #   цикла for (следующему ходу)
+                if load and not i:
+                    load = False
+                    continue
+                # проверяем уровень сложности
+                y, x = ai.random_turn() if players.PLAYER[i][-1] == '1' else ai.ai_turn(i)
+            # запросить ход игрока
+            else:
+                # в случае загружаемой партии c игроком, когда первый ход в возобновлённой
+                #   партии должен быть за вторым игроком, переключаем параметр load
+                #   и переходим к следующей итерации цикла for (следующему ходу)
+                if load and len([cell for row in FIELD for cell in row if cell]) % 2 != i:
+                    load = False
+                    continue
+                # запрашиваем у игрока координаты пока он не укажет незанятую клетку
+                while True:
+                    y, x = map(int, input(prompt).split())
+                    if not FIELD[y][x]:
+                        break
+            # обновляем матрицу поля
+            FIELD[y][x] = SYMBOLS[i]
+            # выводим поле с очередным ходом: слева или справа
+            #   в зависимости от очерёдности хода
+            if DEBUG:
+                show_field(FIELD, ai.WEIGHT[bool(i)], right=bool(i))
+            else:
+                show_field(FIELD, right=bool(i))
+            # проверяем, является ли данный ход завершающим
+            win_or_tie = check_win_or_tie()
+            # ещё не закончили
+            if not any(win_or_tie):
+                continue
+            # чья-то победа
+            elif win_or_tie[0]:
+                # сообщение о победе игрока
+                help.show_message(f'Победил игрок {players.PLAYER[i]}!')
+                # очищаем поле
+                FIELD = [['']*DIM for _ in range(DIM)]
+                # Иван проиграл, а Олег выиграл
+                #   ({'ivan': [0, 1, 0]}, {'oleg': [1, 0, 0]})
+                return {players.PLAYER[i]: [1, 0, 0]}, {players.PLAYER[i-1]: [0, 1, 0]}
+            # ничья
+            elif win_or_tie[1]:
+                # сообщение о ничьей
+                help.show_message('Ничья!')
+                # очищаем поле
+                FIELD = [['']*DIM for _ in range(DIM)]
+                # у обоих ничья
+                #   ({'ivan': [0, 0, 1]}, {'oleg': [0, 0, 1]})
+                return {players.PLAYER[i]: [0, 0, 1]}, {players.PLAYER[i-1]: [0, 0, 1]}
