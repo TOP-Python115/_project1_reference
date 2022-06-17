@@ -64,7 +64,7 @@ def show_field(matrix, *matrices, right=False, center=False):
                 if center else ' ')
     rows = [margin + row for row in rows]
     # вывод строк со значениями с горизонтальными линиями-разделителями
-    print(('' if center else '\n')
+    print(('' if center or right else '\n')
           + ('\n' + margin + pad.join(['—'*wd for wd in m_wd]) + '\n').join(rows)
           + '\n')
 
