@@ -2,11 +2,12 @@
 # Copyright by Gennadiy S. aka GennDALF
 
 from configparser import ConfigParser
-from help import MESSAGES, ANSWERS
-from field import check_saves
+
+import help
+import field
 
 SCORES = {}
-# PLAYERS = {'Ivan': [1, 1, 0]}
+# SCORES = {'Ivan': [1, 1, 0]}
 
 PLAYER = tuple()
 # PLAYER = ('ivan', 'ai1')
@@ -26,9 +27,9 @@ def read_ini():
                   for name, score in config['Scores'].items()}
         # сохранение партии хранится в виде строки – делаем из неё матрицу поля
         SAVES = {tuple(name.split(';')):
-                     [[' ' if c == '-' else c for c in field[i:i+3]]
+                     [[' ' if c == '-' else c for c in matrix[i:i+3]]
                       for i in range(0,9,3)]
-                 for name, field in config['Saves'].items()}
+                 for name, matrix in config['Saves'].items()}
         # первый запуск приложения
         return True if config['General']['first'] == 'yes' else False
     else:
@@ -42,8 +43,8 @@ def save_ini():
                         for name, score in SCORES.items()}
     # из матрицы поля формируем строку для хранения в конфигурационном файле
     config['Saves'] = {';'.join(name):
-                           ''.join(['-' if c == ' ' else c for r in field for c in r])
-                       for name, field in SAVES.items()}
+                           ''.join(['-' if c == ' ' else c for r in matrix for c in r])
+                       for name, matrix in SAVES.items()}
     # если сохраняем данные, значит следующий запуск будет уже не первым
     config['General']['first'] = 'no'
     with open('data.ini', 'w', encoding='utf-8') as config_file:
@@ -54,7 +55,7 @@ def player_name(bot_mode='', *, change_order=False):
     global PLAYER
     # ввод имени первого игрока
     if len(PLAYER) == 0:
-        PLAYER = (input(MESSAGES[1]).lower(), )
+        PLAYER = (input(help.MESSAGES[1]).lower(),)
     # ввод второго имени
     elif len(PLAYER) == 1:
         # в этот параметр необходимо передать строку 'ai1' или 'ai2'
@@ -63,7 +64,7 @@ def player_name(bot_mode='', *, change_order=False):
             PLAYER = (PLAYER[0], bot_mode)
         else:
             # ввести имя второго игрока человека
-            PLAYER = (PLAYER[0], input(MESSAGES[2]).lower())
+            PLAYER = (PLAYER[0], input(help.MESSAGES[2]).lower())
 
     # для выбора символа поменять местами элементы кортежа
     # первый играет крестиком и ходит первым
@@ -76,23 +77,23 @@ def game_mode():
     global PLAYER
     # запрашиваем у игрока режим игры
     while True:
-        gm = input(MESSAGES[3]).lower()
-        if gm in ANSWERS[3]:
+        gm = input(help.MESSAGES[3]).lower()
+        if gm in help.ANSWERS[3]:
             break
     # если одиночная
-    if gm in ANSWERS[3][:3]:
+    if gm in help.ANSWERS[3][:3]:
         # есть ли сохранение для одиночной игры
-        if save := check_saves():
+        if save := field.check_saves():
             # восстановление уровня сложности и очерёдности хода из сохранённой партии
             PLAYER = save
             return True
         # запрашиваем у игрока уровень сложности
         while True:
-            dl = input(MESSAGES[4]).lower()
-            if dl in ANSWERS[4]:
+            dl = input(help.MESSAGES[4]).lower()
+            if dl in help.ANSWERS[4]:
                 break
         # добавляем имя бота к PLAYER
-        if dl in ANSWERS[4][:3]:
+        if dl in help.ANSWERS[4][:3]:
             dl = 'ai1'
         else:
             dl = 'ai2'
@@ -100,11 +101,29 @@ def game_mode():
     # если парная
     else:
         player_name()
-        if save := check_saves(single=False):
+        if save := field.check_saves(single=False):
             # восстановление уровня сложности и очерёдности хода из сохранённой партии
             PLAYER = save
             return True
 
     # выбор очерёдности хода
-    if not (input(MESSAGES[5]).lower() in ANSWERS[5]):
+    if not (input(help.MESSAGES[5]).lower() in help.ANSWERS[5]):
         player_name(change_order=True)
+
+# изменить статистику
+def modify_stats(players):
+    global SCORES
+    for player_stat in players:
+        for player, stat_change in player_stat.items():
+            if not player.startswith('ai'):
+                SCORES[player] = [SCORES.setdefault(player, [0, 0, 0])[i] + stat_change[i]
+                                  for i in range(3)]
+
+# вывести статистику или таблицу результатов
+def show_stats(table=False):
+    if table:
+        pass
+    else:
+        for player in PLAYER:
+            if not player.startswith('ai'):
+                print(player.title(), '\t\t', *SCORES[player], '\n')
