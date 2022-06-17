@@ -24,11 +24,14 @@ def random_turn():
 # принимает индекс очерёдности хода
 def ai_turn(s_ind):
     global WEIGHT
-    #
+    # составление весовой матрицы для занятых ячеек и дальнейшее
+    #   вычислением весовой матрицы для пустых ячеек
     empweights_matrix = empty_weights(symbols_weights(field.FIELD, s_ind))
-    #
+    # суммирование весовой матрицы для пустых ячеек с стартовой/предыдущей
+    #   матрицей для принятия решений и дальнейшая очистка итоговой
+    #   матрицы принятия решений от занятых ячеек
     WEIGHT[s_ind] = clear_empweights(mat_sum(WEIGHT[s_ind], empweights_matrix))
-    #
+    # поиск индексов ячейки с максимальным весом
     y, x = mat_mx_ind(WEIGHT[s_ind])
     return y, x
 
