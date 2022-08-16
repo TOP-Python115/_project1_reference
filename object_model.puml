@@ -1,0 +1,99 @@
+@startuml
+hide empty members
+skinparam groupInheritance 2
+
+legend top left
+""# types annotations""
+""TypeIndexes = tuple[int | int]""
+""TypeRow = tuple[str | int | float, ...] | list[str | int | float]""
+""TypeMatrix = tuple[TypeRow, ...] | list[TypeRow]""
+end legend
+
+'abstract class Exception
+'hide Exception members
+class MatrixError <<Exception>>
+show MatrixError methods
+class IteratorNotMatrixError {
+__init__()
+}
+class DimensionError {
+__init__()
+}
+
+'Exception <|-- MatrixError
+MatrixError <|-- IteratorNotMatrixError
+MatrixError <|-- DimensionError
+
+class Matrix {
++n: int
++m: int
++origin: TypeMatrix
++transposed: TypeMatrix
++main_diag: TypeRow
++anti_diag: TypeRow
+-__flat: TypeRow
+__init__(matrix: TypeMatrix)
+-__is_valid(matrix: TypeMatrix): bool {static}
+__repr__(): str
+__str__(): str
+__add__(value: Matrix): Matrix
+__sub__(value: Matrix): Matrix
+-__elem_opers(value: Matrix, oper: str): Matrix
+__contains__(value: str | int | float): bool
++is_square(): bool
++index_of_max(): TypeIndexes
+}
+
+IteratorNotMatrixError --# "raise" Matrix::__init__
+'note on link: raise
+DimensionError --# "raise" Matrix::__add__
+DimensionError --# "raise" Matrix::__sub__
+
+class Game {
++player1: Player | Bot
++player2: Player | Bot
++board: Matrix
++turns: int
++play()
++save()
+}
+
+class Player {
++name: str
++wins: int
++ties: int
++fails: int
++training: bool
++token: Tokens
++turn(): TypeIndexes
+}
+
+class Bot {
+difficulty: Difficulties
+token: Tokens
++turn(): TypeIndexes
+-__random_turn(): TypeIndexes
+-__weights_tokens(board: Matrix): Matrix
+-__weights_empty(tokens_weights: Matrix): Matrix
+-__weights_resolve(empty_weights: Matrix): Matrix
+}
+
+enum Difficulties {
+EASY
+HARD
+}
+enum Tokens {
+CROSS: str = 'X'
+NOUGHT: str = 'O'
+}
+
+Matrix --o Game::board
+Game::player1 o-- Player
+Game::player2 o-- Player
+Game::player1 o-- Bot
+Game::player2 o-- Bot
+Player::token o-- Tokens
+Bot::token o-- Tokens
+Bot::difficulty o-- Difficulties
+
+@enduml
